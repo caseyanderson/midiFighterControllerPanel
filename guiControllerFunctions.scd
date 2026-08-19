@@ -64,6 +64,15 @@
         ~twisterColumnLabels[col].string_(name);
     });
 };
+~applyTwisterMap = { |list, col, colName|
+    if(col.notNil && colName.notNil, {
+        ~labelTwisterColumn.(col, colName);
+    });
+    list.do { |item|
+        ~labelTwisterKnob.(item[\knob], item[\label]);
+        ~setTwisterDisplayRange.(item[\knob], item[\min], item[\max]);
+    };
+};
 ////////////////////////////////////
 /* USAGE EXAMPLES
 ~enableAllTwisterStatus.();
@@ -78,4 +87,12 @@
 ~labelTwisterKnob.(0, "amp");
 ~labelTwisterKnob.(4, "outGain");
 ~setTwisterDisplayRange.(4, 0.4, 2.2);
+
+~goopyMap = [
+	(knob: 0,  arg: \amp,        label: "amp",     min: 0.0, max: 1.0),
+	(knob: 4,  arg: \outGainCtl, label: "outGain", min: 0.4, max: 2.2),
+	(knob: 8,  arg: \goopCtl,    label: "goop",    min: 0.3, max: 1.0),
+	(knob: 12, arg: \decay,      label: "decay",   min: 0.4, max: 1.4),
+];
+~applyTwisterMap.(~goopyMap, 0, "goopyBubble");
 */
