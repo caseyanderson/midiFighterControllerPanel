@@ -50,10 +50,22 @@ s.waitForBoot({
 	~makeCombinedPanel.value;
 	(~controllerDir ++ "twisterSpectra_knobActions.scd").load;
 	(~controllerDir ++ "twisterSpectra_midi.scd").load;
-	~combinedPanel.onClose_({
-		~twisterBusses.do(_.free);
-		~spectraBusses.do(_.free);
-		MIDIIn.disconnectAll;
-	});
+
+~combinedPanel.onClose_({
+	s.freeAll;
+
+	~kbSampleOn.free;
+	~kbSampleOff.free;
+	~kbSampleNotes = Array.newClear(128);
+
+	~twisterCCFuncs.do(_.free);
+	~twisterNoteOnFunc.free;
+	~twisterNoteOffFunc.free;
+	~spectraCCFunc.free;
+
+	~twisterBusses.do(_.free);
+	~spectraBusses.do(_.free);
+	MIDIIn.disconnectAll;
+});
 });
 )
