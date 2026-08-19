@@ -7,7 +7,6 @@
     };
     "All 16 Twister GUI status buttons → ENABLED (ON)".postln;
 };
-
 // Turn ALL Twister GUI status buttons OFF
 ~disableAllTwisterStatus = {
     ~twisterData[\twisterStrips].do { |strip|
@@ -17,22 +16,17 @@
     };
     "All 16 Twister GUI status buttons → DISABLED (OFF)".postln;
 };
-
-
 // Turn ON the first N Spectra GUI status buttons (BUTTON X On)
 ~enableSpectraStatus = { |numToEnable = 8|
-    var count = numToEnable.clip(0, 16);  // safe range 0–16
-
+    var count = numToEnable.clip(0, 16); // safe range 0–16
     ~spectraData[\spectraStrips].do { |strip, i|
         if(strip.notNil && strip[\button1].notNil) {
             var newVal = if(i < count, 1, 0);
             strip[\button1].valueAction_(newVal);
         };
     };
-
     "Spectra: first % GUI status buttons → ENABLED (ON), rest OFF".format(count).postln;
 };
-
 // Turn ALL Spectra status buttons OFF (convenience)
 ~disableAllSpectraStatus = {
     ~spectraData[\spectraStrips].do { |strip|
@@ -42,18 +36,46 @@
     };
     "All Spectra GUI status buttons → DISABLED (OFF)".postln;
 };
-
-
+~labelTwisterKnob = { |num, name|
+    var strip = ~twisterData[\twisterStrips][num];
+    if(strip.notNil && strip[\button].notNil, {
+        strip[\label] = name;
+        strip[\button].states_([
+            [name, Color.black, Color.gray],
+            [name, Color.white, Color.red]
+        ]);
+        strip[\button].refresh;
+    });
+};
+~setTwisterDisplayRange = { |num, min = 0.0, max = 1.0|
+    var strip = ~twisterData[\twisterStrips][num];
+    if(strip.notNil, {
+        strip[\dispMin] = min;
+        strip[\dispMax] = max;
+        if(strip[\number2].notNil, {
+            strip[\number2].value_(
+                strip[\knob].value.linlin(0, 1, min, max)
+            );
+        });
+    });
+};
+~labelTwisterColumn = { |col, name|
+    if(~twisterColumnLabels.notNil, {
+        ~twisterColumnLabels[col].string_(name);
+    });
+};
+////////////////////////////////////
 /* USAGE EXAMPLES
-
-~enableAllTwisterStatus.();    // turns on all 16 Twister status buttons ("KNOB X On")
-~disableAllTwisterStatus.();   // turns them all off again
-
-~enableSpectraStatus.(4);     // turn on only first 4 (BUTTON 0–3)
-~enableSpectraStatus.(8);     // first 8 (common half-panel)
-~enableSpectraStatus.(12);    // first 12
-~enableSpectraStatus.(16);    // all of them (same as ~enableSpectraStatus.())
-~enableSpectraStatus.(0);     // turn all off (equivalent to ~disableAllSpectraStatus.())
-
-~disableAllSpectraStatus.();  // quick all-off
+~enableAllTwisterStatus.();
+~disableAllTwisterStatus.();
+~enableSpectraStatus.(4);
+~enableSpectraStatus.(8);
+~enableSpectraStatus.(12);
+~enableSpectraStatus.(16);
+~enableSpectraStatus.(0);
+~disableAllSpectraStatus.();
+~labelTwisterColumn.(0, "goopyBubble");
+~labelTwisterKnob.(0, "amp");
+~labelTwisterKnob.(4, "outGain");
+~setTwisterDisplayRange.(4, 0.4, 2.2);
 */

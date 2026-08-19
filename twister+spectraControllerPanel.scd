@@ -3,44 +3,33 @@ MIDI Fighter Twister + Spectra Control Panel
 Casey Anderson
 Twister: CC 0-15, Channel 1 (chan=0)
 Spectra: CC 36-51, Channel 4 (chan=3)
-
-On Winddows: connects to Voicemeeter Virtual ASIO
+On Windows: connects to Voicemeeter Virtual ASIO
 on Mac: connects to Blackhole 16ch
-
 Usage Example (from another file startup block)
-
 ~platform = \windows; // or \mac
 (~paths[~platform] ++ "twister+spectraControllerPanel.scd").load;
-
 */
-
 (
 // get controller functions file
 ~paths = (
-	mac: "/Users/cta/midiFighterControllerPanel/",
-	windows: "C:/Users/cta/midiFighterControllerPanel/"
+mac: "/Users/cta/midiFighterControllerPanel/",
+windows: "C:/Users/cta/midiFighterControllerPanel/"
 );
 ~controllerDir = ~paths[~platform];
 (~controllerDir ++ "guiControllerFunctions.scd").load;
-
 // configure and start the server per OS
 Server.killAll;
 s = Server.default;
-
 ///////// Server Connection for Mac / Windows
-
 if(~platform == \mac, {
-	s.options.device = "BlackHole 16ch";
-	s.options.numOutputBusChannels = 16;
+s.options.device = "BlackHole 16ch";
+s.options.numOutputBusChannels = 16;
 });
-
 if(~platform == \windows, {
-	s.options.device = "ASIO : Voicemeeter Virtual ASIO";
-	s.options.numOutputBusChannels = 8;
+s.options.device = "ASIO : Voicemeeter Virtual ASIO";
+s.options.numOutputBusChannels = 8;
 });
-
 /////////
-
 s.options.sampleRate = 48000;
 s.options.hardwareBufferSize = 512;
 s.options.memSize = 65536;
@@ -77,22 +66,28 @@ s.waitForBoot({
         statusButton = Button()
             .minSize_(80@30)
             .states_([
-                ["KNOB " ++ knobNum ++ " Off", Color.black, Color.gray],
-                ["KNOB " ++ knobNum ++ " On", Color.white, Color.red]
+                ["KNOB " ++ knobNum, Color.black, Color.gray],
+                ["KNOB " ++ knobNum, Color.white, Color.red]
             ])
             .value_(0);
         statusButton.action_({ |but|
             if(but.value == 0, { ~twisterBusses[knobNum].set(0.0); });
         });
         knob = Knob().minSize_(80@80).value_(0.0);
-        knobValDisplay = NumberBox().minSize_(80@30).align_(\center).value_(0.0).clipLo_(0.0).clipHi_(1.0).decimals_(3);
+        knobValDisplay = NumberBox()
+            .minSize_(80@30)
+            .align_(\center)
+            .value_(0.0)
+            .decimals_(3);
         view = View().background_(Color.gray(0.9))
             .layout_(VLayout(statusButton, knob, knobValDisplay).spacing_(5).margins_([10,5,10,5]));
         IdentityDictionary[
             \layout -> view,
             \button -> statusButton,
             \knob -> knob,
-            \number2 -> knobValDisplay
+            \number2 -> knobValDisplay,
+            \dispMin -> 0.0,
+            \dispMax -> 1.0
         ];
     };
     ~spectraLayout = { |buttonNum|
@@ -100,8 +95,8 @@ s.waitForBoot({
         statusButton = Button()
             .minSize_(80@30)
             .states_([
-                ["BUTTON " ++ buttonNum ++ " Off", Color.black, Color.gray],
-                ["BUTTON " ++ buttonNum ++ " On", Color.white, Color.red]
+                ["BUTTON " ++ buttonNum, Color.black, Color.gray],
+                ["BUTTON " ++ buttonNum, Color.white, Color.red]
             ])
             .value_(0);
         statusButton.action_({ |but|
@@ -132,14 +127,25 @@ s.waitForBoot({
         if(~combinedPanel.notNil, { ~combinedPanel.close });
         ~twisterData[\twisterStrips] = twisterStrips;
         ~spectraData[\spectraStrips] = spectraStrips;
+        ~twisterColumnLabels = 4.collect {
+            StaticText()
+                .align_(\center)
+                .string_("")
+                .fixedWidth_(80)
+                .minHeight_(0)
+                .maxHeight_(18);
+        };
         ~combinedPanel = Window.new("Twister + Spectra Control Panel", Rect(0,0,892,692))
             .alwaysOnTop_(true)
             .layout_(
                 VLayout(
                     HLayout(
-                        GridLayout.rows(
-                            *twisterStrips.clump(4).collect { |row| row.collect { |strip| strip[\layout] } }
-                        ).hSpacing_(10).vSpacing_(10),
+                        VLayout(
+                            HLayout(*~twisterColumnLabels).spacing_(10),
+                            GridLayout.rows(
+                                *twisterStrips.clump(4).collect { |row| row.collect { |strip| strip[\layout] } }
+                            ).hSpacing_(10).vSpacing_(10)
+                        ),
                         GridLayout.rows(
                             *spectraStrips.clump(4).collect { |row| row.collect { |strip| strip[\layout] } }
                         ).hSpacing_(10).vSpacing_(10)
@@ -188,7 +194,9 @@ s.waitForBoot({
         var strip = ~twisterData[\twisterStrips][num];
         if(strip.notNil && strip[\knob].notNil, {
             strip[\knob].action_({ |obj|
-                strip[\number2].value_(obj.value);
+                strip[\number2].value_(
+                    obj.value.linlin(0, 1, strip[\dispMin] ? 0.0, strip[\dispMax] ? 1.0)
+                );
                 if(strip[\button].value == 1, {
                     var val = obj.value;
                     var now = thisThread.seconds;
