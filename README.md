@@ -12,13 +12,12 @@ SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses,
 
 ## Setup
 
-1. Clone this repo (or place the files) in the same path on each machine, or update the paths below.
+1. Clone this repo (or place the files) in the same path on each machine, or update the paths below
 2. In a SuperCollider file, set the platform and load the panel:
 
 ```supercollider
 (
 ~platform = \windows; // or \mac
-
 ~paths = (
 	mac: "/Users/USERNAME/midiFighterControllerPanel/",
 	windows: "C:/Users/USERNAME/midiFighterControllerPanel/"
@@ -34,8 +33,20 @@ SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses,
 
 - 16 Twister knobs → control busses `~twisterBusses[0..15]` (values 0.0 – 1.0)
 - 16 Spectra buttons → GUI + OSC on `/buttonControl`
+- Knob moves can also send `/knobControl`
 - Status buttons enable/disable each control (gray = off, red = on)
-- Optional labels and display ranges (see below)
+- Optional column/knob labels and scaled number-box ranges via maps (see below)
+
+## Repo layout
+
+Loading `twister+spectraControllerPanel.scd` pulls in:
+
+- `guiControllerFunctions.scd` — enable/disable helpers, labels, `~applyTwisterMap`
+- `twisterSpectra_init.scd` — constants, state, control busses
+- `twisterSpectra_layouts.scd` — strip layouts
+- `twisterSpectra_panel.scd` — window assembly
+- `twisterSpectra_knobActions.scd` — GUI knob behavior
+- `twisterSpectra_midi.scd` — MIDI responders
 
 ## Typical synth file structure
 
@@ -54,23 +65,44 @@ SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses,
 
 (
 ///////// SYNTHDEF
-// Map synth args to ~twisterBusses[n].asMap as needed
+// Def name should match the symbol used in the maps list below
 )
 
 // Wait for the GUI window to load, then:
 (
-///////// LABELS (optional)
-~labelTwisterColumn.(0, "synthName");
-~labelTwisterKnob.(0, "paramA");
-~labelTwisterKnob.(4, "paramB");
-~setTwisterDisplayRange.(4, 0.0, 1.0); // min/max for number box only; bus stays 0–1
+///////// MAP + LABELS
+~myMaps = [
+	(
+		name: \mySynth,
+		map: [
+			(knob: 0, arg: \amp, label: "amp", min: 0.0, max: 1.0),
+			(knob: 4, arg: \outGainCtl, label: "outGain", min: 0.4, max: 2.2),
+		]
+	),
+];
+~myMaps.do { |item, i|
+	~applyTwisterMap.(item[\map], i, item[\name].asString);
+};
 )
 
 (
-///////// OSC / control
-// Listen to '/buttonControl' or '/knobControl' as needed
-// Example: enable a knob's bus with .asMap when creating Synths
+///////// OSC / MIDI
+// Synth(~myMaps[0][\name], [
+//     \amp, ~twisterBusses[0].asMap,
+//     \outGainCtl, ~twisterBusses[4].asMap,
+// ]);
 )
+```
+
+### Several synths (one per Twister column)
+
+Use several `(name:, map:)` entries in the same list. The `.do` index is the column (`0` → knobs `0,4,8,12`, `1` → `1,5,9,13`, etc.):
+
+```supercollider
+~myMaps.do { |item, i|
+	~applyTwisterMap.(item[\map], i, item[\name].asString);
+};
+// Synth(~myMaps[idx][\name], ...) when triggering by column/button index
 ```
 
 ## Helpers
@@ -78,9 +110,12 @@ SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses,
 ```supercollider
 ~enableAllTwisterStatus.();
 ~disableAllTwisterStatus.();
-~enableSpectraStatus.(8);   // first N status buttons on
+~enableSpectraStatus.(8);   // first N Spectra status buttons on
 ~disableAllSpectraStatus.();
 
+~applyTwisterMap.(list, col, colName); // preferred: labels + display ranges for one column
+
+// Lower-level (used inside ~applyTwisterMap; available if needed):
 ~labelTwisterColumn.(col, "name");     // col 0–3
 ~labelTwisterKnob.(num, "name");       // num 0–15
 ~setTwisterDisplayRange.(num, min, max);
@@ -88,8 +123,10 @@ SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses,
 
 ## Notes
 
-- Twister knobs are often grouped by column: `0,4,8,12` / `1,5,9,13` / etc.
-- Busses always carry 0–1. Display ranges only affect the number boxes.
+- Twister knobs are often grouped by column: `0,4,8,12` / `1,5,9,13` / `2,6,10,14` / `3,7,11,15`.
+- Busses always carry 0–1. Display `min`/`max` in a map only affect the number boxes.
+- Preferred labeling pattern: one maps list of `(name:, map:)` entries; apply with `~applyTwisterMap` in a `.do`.
+- `name` should match the SynthDef symbol if you create synths with `Synth(~myMaps[n][\name], ...)`.
 - Press a Twister encoder (Note Toggle) or click its status button to enable/disable that knob.
 - Encoder switches must be set to **Note Toggle** in Midi Fighter Utility.
 
