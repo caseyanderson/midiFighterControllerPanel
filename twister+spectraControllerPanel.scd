@@ -13,6 +13,7 @@ Usage Example (from another file startup block)
 (~paths[~platform] ++ "twister+spectraControllerPanel.scd").load;
 
 */
+
 (
 ~paths = (
 	mac: "/Users/cta/midiFighterControllerPanel/",
@@ -20,9 +21,12 @@ Usage Example (from another file startup block)
 );
 ~controllerDir = ~paths[~platform];
 (~controllerDir ++ "guiControllerFunctions.scd").load;
+
 Server.killAll;
 s = Server.default;
+
 ///////// Server Connection for Mac / Windows
+
 if(~platform == \mac, {
 	s.options.device = "BlackHole 16ch";
 	s.options.numOutputBusChannels = 16;
@@ -31,11 +35,14 @@ if(~platform == \windows, {
 	s.options.device = "ASIO : Voicemeeter Virtual ASIO";
 	s.options.numOutputBusChannels = 8;
 });
+
 /////////
+
 s.options.sampleRate = 48000;
 s.options.hardwareBufferSize = 512;
 s.options.memSize = 65536;
 s.boot;
+
 s.waitForBoot({
 	(~controllerDir ++ "twisterSpectra_init.scd").load;
 	(~controllerDir ++ "twisterSpectra_layouts.scd").load;
