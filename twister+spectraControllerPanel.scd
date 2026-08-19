@@ -17,8 +17,8 @@ Usage Example (from another file startup block)
 (
 // get controller functions file
 ~paths = (
-	mac: "/Users/cta/in_progress_sc/2025/MIDIFighterControllerPanels/",
-	windows: "C:/Users/cta/in_progress_sc/2025/MIDIFighterControllerPanels/"
+	mac: "/Users/cta/midiFighterControllerPanel/",
+	windows: "C:/Users/cta/midiFighterControllerPanel/"
 );
 ~controllerDir = ~paths[~platform];
 (~controllerDir ++ "guiControllerFunctions.scd").load;
