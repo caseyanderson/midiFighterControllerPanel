@@ -16,7 +16,7 @@ Usage Example (from another file startup block)
 
 (
 ~paths = (
-	mac: "/Users/cta/midiFighterControllerPanel/",
+	mac: "/Users/casey.anderson/midiFighterControllerPanel/",
 	windows: "C:/Users/cta/midiFighterControllerPanel/"
 );
 ~controllerDir = ~paths[~platform];
