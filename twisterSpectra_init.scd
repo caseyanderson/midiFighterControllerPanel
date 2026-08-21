@@ -16,6 +16,10 @@
 ~twisterStatus = Array.fill(16, 0);
 ~twisterActiveLED = 85; // red-ish
 ~spectraLastValue = Array.fill(16, -1);
+~spectraStatus = Array.fill(16, 0);
+~spectraInactiveLED = 7;
+~spectraActiveLED = 13;
+~spectraPressedLED = 37; // bright yellow
 ~twisterData = Dictionary.new;
 ~spectraData = Dictionary.new;
 // ┌─────────────────────────────────────────────────────────────────────────────┐

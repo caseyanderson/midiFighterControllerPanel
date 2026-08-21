@@ -15,20 +15,15 @@
 // Turn ON the first N Spectra GUI status buttons (BUTTON X On)
 ~enableSpectraStatus = { |numToEnable = 8|
     var count = numToEnable.clip(0, 16);
-    ~spectraData[\spectraStrips].do { |strip, i|
-        if(strip.notNil && strip[\button1].notNil) {
-            var newVal = if(i < count, 1, 0);
-            strip[\button1].valueAction_(newVal);
-        };
+    ~buttons.do { |buttonNum|
+        ~setSpectraStatus.(buttonNum, buttonNum < count);
     };
     "Spectra: first % GUI status buttons → ENABLED (ON), rest OFF".format(count).postln;
 };
 // Turn ALL Spectra status buttons OFF
 ~disableAllSpectraStatus = {
-    ~spectraData[\spectraStrips].do { |strip|
-        if(strip.notNil && strip[\button1].notNil) {
-            strip[\button1].valueAction_(0);
-        };
+    ~buttons.do { |buttonNum|
+        ~setSpectraStatus.(buttonNum, false);
     };
     "All Spectra GUI status buttons → DISABLED (OFF)".postln;
 };

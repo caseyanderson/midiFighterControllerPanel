@@ -22,6 +22,20 @@ MIDIIn.connectAll;
 	nil;
 });
 
+~spectraDestinationIndex = MIDIClient.destinations.detectIndex { |dest|
+	dest.name.contains("Spectra")
+};
+
+~spectraLEDOut = if(~spectraDestinationIndex.notNil, {
+	MIDIOut(
+		~spectraDestinationIndex,
+		MIDIClient.destinations[~spectraDestinationIndex].uid
+	);
+}, {
+	"MIDI Fighter Spectra output not found; LED feedback is disabled.".warn;
+	nil;
+});
+
 // free previous panel responders only
 ~twisterCCFuncs.do(_.free);
 ~twisterNoteOnFunc.free;
@@ -99,6 +113,38 @@ if(~twisterUID.notNil, {
 });
 
 if(~spectraUID.notNil, {
+	~setSpectraLED = { |idx, color|
+		var midiNumber = ~ccToButton.keys.detect { |cc|
+			~ccToButton[cc] == idx
+		};
+
+		if(~spectraLEDOut.notNil && midiNumber.notNil, {
+			~spectraLEDOut.noteOn(2, midiNumber, color);
+		});
+	};
+
+	~setSpectraStatus = { |idx, isActive|
+		var status = isActive.asInteger;
+
+		~spectraStatus[idx] = status;
+		~setSpectraLED.(
+			idx,
+			if(status == 1, ~spectraActiveLED, ~spectraInactiveLED)
+		);
+
+		{
+			var strip = ~spectraData[\spectraStrips][idx];
+
+			if(strip.notNil && strip[\button1].notNil, {
+				strip[\button1].value_(status);
+
+				if(status == 0, {
+					strip[\button2].valueAction_(0);
+				});
+			});
+		}.defer;
+	};
+
 	~spectraCCFunc = MIDIFunc.cc({ |val, cc, chan, src|
 		var idx = ~ccToButton[cc];
 
@@ -107,6 +153,15 @@ if(~spectraUID.notNil, {
 
 			if(~spectraLastValue[idx].isNil || mappedVal != ~spectraLastValue[idx], {
 				~spectraLastValue[idx] = mappedVal;
+
+				if(~spectraStatus[idx] == 1, {
+					~setSpectraLED.(
+						idx,
+						if(mappedVal == 1, ~spectraPressedLED, ~spectraActiveLED)
+					);
+				}, {
+					~setSpectraLED.(idx, ~spectraInactiveLED);
+				});
 
 				AppClock.sched(0, {
 					var strip = ~spectraData[\spectraStrips][idx];
@@ -119,4 +174,10 @@ if(~spectraUID.notNil, {
 			});
 		});
 	}, nil, 3, ~spectraUID);
+
+	if(~spectraLEDOut.notNil, {
+		~buttons.do { |idx|
+			~setSpectraLED.(idx, ~spectraInactiveLED);
+		};
+	});
 });
