@@ -55,9 +55,20 @@
         ~twisterColumnLabels[col].string_(name);
     });
 };
+~labelSpectraButton = { |num, name|
+    var strip = ~spectraData[\spectraStrips][num];
+    if(strip.notNil && strip[\button1].notNil, {
+        strip[\button1].states_([
+            [name, Color.black, Color.gray],
+            [name, Color.white, Color.red]
+        ]);
+        strip[\button1].refresh;
+    });
+};
 ~applyTwisterMap = { |list, col, colName|
     if(col.notNil && colName.notNil, {
         ~labelTwisterColumn.(col, colName);
+        ~labelSpectraButton.(col, colName);
     });
     list.do { |item|
         ~labelTwisterKnob.(item[\knob], item[\label]);
