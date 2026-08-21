@@ -40,7 +40,7 @@
 		])
 		.value_(0);
 	statusButton.action_({ |but|
-		if(but.value == 0, { button.valueAction_(0); });
+		~setSpectraStatus.(buttonNum, but.value == 1);
 	});
 	button = Button()
 		.minSize_(80@80)
