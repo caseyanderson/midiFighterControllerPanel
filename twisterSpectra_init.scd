@@ -13,6 +13,8 @@
 ~twisterLastValue = Array.fill(16, -1);
 ~twisterLastBusValue = Array.fill(16, 0.0);
 ~twisterLastSetTime = Array.fill(16, -999999.0);
+~twisterStatus = Array.fill(16, 0);
+~twisterActiveLED = 85; // red-ish
 ~spectraLastValue = Array.fill(16, -1);
 ~twisterData = Dictionary.new;
 ~spectraData = Dictionary.new;

@@ -1,18 +1,14 @@
 // Turn ALL Twister GUI status buttons ON (enable message sending for all 16 knobs)
 ~enableAllTwisterStatus = {
-    ~twisterData[\twisterStrips].do { |strip|
-        if(strip.notNil && strip[\button].notNil) {
-            strip[\button].valueAction_(1);
-        };
+    ~knobs.do { |knobNum|
+        ~setTwisterStatus.(knobNum, true);
     };
     "All 16 Twister GUI status buttons → ENABLED (ON)".postln;
 };
 // Turn ALL Twister GUI status buttons OFF
 ~disableAllTwisterStatus = {
-    ~twisterData[\twisterStrips].do { |strip|
-        if(strip.notNil && strip[\button].notNil) {
-            strip[\button].valueAction_(0);
-        };
+    ~knobs.do { |knobNum|
+        ~setTwisterStatus.(knobNum, false);
     };
     "All 16 Twister GUI status buttons → DISABLED (OFF)".postln;
 };

@@ -11,7 +11,7 @@
 		])
 		.value_(0);
 	statusButton.action_({ |but|
-		if(but.value == 0, { ~twisterBusses[knobNum].set(0.0); });
+		~setTwisterStatus.(knobNum, but.value == 1);
 	});
 	knob = Knob().minSize_(80@80).value_(0.0);
 	knobValDisplay = NumberBox()
