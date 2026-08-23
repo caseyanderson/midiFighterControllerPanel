@@ -1,70 +1,65 @@
 # midiFighterControllerPanel
 
-SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses, and MIDI/OSC routing for prototyping and performance.
+SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses, MIDI/OSC routing, status synchronization, and optional performance layouts
 
 ## Requirements
 
 - SuperCollider
-- MIDI Fighter Twister (CC 0–15, channel 1)
-- MIDI Fighter Spectra (CC 36–51, channel 4)
-- **Windows:** VoiceMeeter (Banana) Virtual ASIO
+- MIDI Fighter Twister
+- MIDI Fighter Spectra
+- **Windows:** VoiceMeeter Virtual ASIO
 - **Mac:** BlackHole 16ch
 
 ## Setup
 
-1. Clone this repository, then set the path for your machine below.
-2. In a SuperCollider file, set the platform and load the panel:
+Clone this repository into your home directory as `midiFighterControllerPanel`, then load it from SuperCollider:
 
 ```supercollider
 (
-~platform = \windows; // or \mac
-~paths = (
-	mac: "/Users/USERNAME/midiFighterControllerPanel/",
-	windows: "C:/Users/USERNAME/midiFighterControllerPanel/"
-);
-~controllerDir = ~paths[~platform];
-(~controllerDir ++ "twister+spectraControllerPanel.scd").load;
+~controllerDir = Platform.userHomeDir +/+ "midiFighterControllerPanel";
+(~controllerDir +/+ "twister+spectraControllerPanel.scd").load;
 )
 ```
 
-3. Wait until the control panel window appears before running further blocks.
+The panel automatically selects the configured Windows or macOS audio device
 
 ## Controller configuration
 
 Configure the controllers in Midi Fighter Utility:
 
-- **Twister:** Set each encoder switch to **Note Toggle**. The panel uses those note messages to enable and disable each knob.
-- **Spectra:** Enable **Momentary CC**. The panel receives press/release CC messages on channel 4.
-- **Spectra:** Disable **Spark** under Animations. This keeps disabled pads visually off when pressed.
+- **Twister:** Set each encoder switch to **Note Toggle**
+- **Spectra:** Enable **Momentary CC**
+- **Spectra:** Disable **Spark** under Animations so disabled pads remain visually off when pressed
 
 ## Features
 
-- 16 Twister knobs → control busses `~twisterBusses[0..15]` (values 0.0–1.0)
-- 16 Spectra pads → GUI control and OSC `/buttonControl` messages
-- Active Twister knobs → GUI control, OSC `/knobControl` messages, and red LEDs on the hardware
-- Active Spectra pads → red when idle and yellow while held; disabled pads remain off
-- GUI controls, physical controls, and enable/disable helpers stay in sync
-- Optional column/knob labels and scaled number-box ranges via maps (see below)
+- 16 Twister knobs mapped to control busses `~twisterBusses[0..15]` with values from `0.0` to `1.0`
+- 16 Spectra pads with GUI control and OSC `/buttonControl` messages
+- Active Twister knobs send GUI updates, OSC `/knobControl` messages, and red hardware LED feedback
+- Active Spectra pads are red when idle and yellow while held
+- GUI controls, physical controls, and enable/disable helpers stay synchronized
+- Optional source labels, parameter labels, and scaled number-box ranges through maps
+- Prototype and performance modes with Twister-only, Spectra-only, or combined layouts
 
 ## Status and LED feedback
 
-Each controller’s status is synced across the hardware, GUI, and helper functions.
+Each controller’s status stays synchronized across hardware, GUI, and helper functions
 
 ### Twister
 
-- Pressing an encoder switch, clicking its GUI status button, or calling a Twister status helper updates the same state.
-- Active knobs show red LED feedback; inactive knobs are off.
-- Only active knobs update the GUI, OSC, and control busses from incoming encoder CC messages.
-- Disabling a knob resets its control bus to `0.0`.
+- Press an encoder switch, click its GUI status button, or call a Twister status helper to update the same activation state
+- Active knobs show red LED feedback and inactive knobs are off
+- Only active knobs update the GUI, OSC, and control busses from incoming encoder CC messages
+- Disabling a knob resets its control bus to `0.0`
 
 ### Spectra
 
-- Clicking a Spectra GUI status button or calling a Spectra helper updates both the GUI and hardware LED.
-- Disabled pads are off and do not pass their physical press/release state to the panel.
-- Active pads are red when idle and bright yellow while physically held.
-- Releasing an active pad returns it to red.
+- Click a Spectra GUI status button or call a Spectra helper to update both the GUI and hardware LED
+- Disabled pads are off and do not pass their physical press/release state to the panel
+- Active pads are red when idle and bright yellow while physically held
+- Releasing an active pad returns it to red
 
-To customize the Spectra LED colors, change these values in `twisterSpectra_init.scd`:
+To customize Spectra LED colors, change these values in `twisterSpectra_init.scd`:
 
 ```supercollider
 ~spectraInactiveLED = 7;
@@ -72,95 +67,157 @@ To customize the Spectra LED colors, change these values in `twisterSpectra_init
 ~spectraPressedLED = 37;
 ```
 
+## Prototype and performance modes
+
+Use prototype mode to expose all available controls, assign maps, and enable or disable controls:
+
+```supercollider
+~setControllerPanelMode.(\prototype);
+```
+
+Use performance mode to show only active controls. Status labels become static text and controls cannot be activated or deactivated from the performance panel:
+
+```supercollider
+~setControllerPanelMode.(\performance);
+```
+
+Select which controllers appear in either mode:
+
+```supercollider
+~setControllerPanelControllers.(\twister);
+~setControllerPanelControllers.(\spectra);
+~setControllerPanelControllers.(\both);
+```
+
+## Direct performance startup
+
+A project can define its finished controller state before loading the panel. Active controls appear in performance mode and their hardware LEDs initialize to match:
+
+```supercollider
+(
+~controllerPanelInitialConfig = (
+    mode: \performance,
+    controllers: \both,
+    twisterActive: [0, 4, 8],
+    spectraActive: [0]
+);
+
+~controllerDir = Platform.userHomeDir +/+ "midiFighterControllerPanel";
+(~controllerDir +/+ "twister+spectraControllerPanel.scd").load;
+)
+```
+
+`twisterActive` and `spectraActive` contain controller indices from `0` through `15`
+
+## Deferred panel opening
+
+Projects that need source maps before the GUI appears can defer panel construction:
+
+```supercollider
+(
+~controllerDir = Platform.userHomeDir +/+ "midiFighterControllerPanel";
+
+~controllerPanelInitialConfig = (
+    mode: \performance,
+    controllers: \both,
+    twisterActive: [0, 4, 8],
+    spectraActive: [0]
+);
+
+~controllerPanelDeferOpen = true;
+(~controllerDir +/+ "twister+spectraControllerPanel.scd").load;
+
+s.waitForBoot({
+    ~sourceMaps = [
+        (
+            name: \exampleSource,
+            map: [
+                (knob: 0, arg: \amp, label: "amp", min: 0.0, max: 1.0),
+                (knob: 4, arg: \rate, label: "rate", min: 0.1, max: 12.0),
+                (knob: 8, arg: \depth, label: "depth", min: 0.0, max: 1.0)
+            ]
+        )
+    ];
+
+    ~sourceMaps.do { |source, sourceIndex|
+        ~applyTwisterMap.(
+            source[\map],
+            sourceIndex,
+            source[\name].asString
+        );
+    };
+
+    ~openControllerPanel.();
+});
+)
+```
+
+This is useful when a project starts directly in performance mode and needs mapped source labels before the panel is built
+
 ## Repo layout
 
 Loading `twister+spectraControllerPanel.scd` loads:
 
-- `guiControllerFunctions.scd` — enable/disable helpers, labels, `~applyTwisterMap`
-- `twisterSpectra_init.scd` — constants, state, control busses, and LED color values
+- `guiControllerFunctions.scd` — enable/disable helpers, labels, and `~applyTwisterMap`
+- `twisterSpectra_init.scd` — constants, state, control busses, LED colors, and panel configuration
 - `twisterSpectra_layouts.scd` — Twister and Spectra strip layouts
-- `twisterSpectra_panel.scd` — window assembly
+- `twisterSpectra_panel.scd` — window assembly and prototype/performance layouts
 - `twisterSpectra_knobActions.scd` — GUI knob behavior
 - `twisterSpectra_midi.scd` — MIDI responders and hardware LED feedback
 
-## Typical synth file structure
+## Maps and labels
+
+Use one map entry per source. The source index determines its Twister column and corresponding Spectra label:
 
 ```supercollider
 (
-///////// SETUP
-~platform = \windows; // or \mac
-~paths = (
-	mac: "/Users/USERNAME/midiFighterControllerPanel/",
-	windows: "C:/Users/USERNAME/midiFighterControllerPanel/"
-);
-~controllerDir = ~paths[~platform];
-(~controllerDir ++ "twister+spectraControllerPanel.scd").load;
-// ... any other setup ...
-)
-
-(
-///////// SYNTHDEF
-// Def name should match the symbol used in the maps list below
-)
-
-// Wait for the GUI window to load, then:
-(
-///////// MAP + LABELS
-~myMaps = [
-	(
-		name: \mySynth,
-		map: [
-			(knob: 0, arg: \amp, label: "amp", min: 0.0, max: 1.0),
-			(knob: 4, arg: \outGainCtl, label: "outGain", min: 0.4, max: 2.2),
-		]
-	),
+~sourceMaps = [
+    (
+        name: \exampleSource,
+        map: [
+            (knob: 0, arg: \amp, label: "amp", min: 0.0, max: 1.0),
+            (knob: 4, arg: \rate, label: "rate", min: 0.1, max: 12.0),
+            (knob: 8, arg: \depth, label: "depth", min: 0.0, max: 1.0)
+        ]
+    )
 ];
-~myMaps.do { |item, i|
-	~applyTwisterMap.(item[\map], i, item[\name].asString);
-};
-)
 
-(
-///////// OSC / MIDI
-// Synth(~myMaps[0][\name], [
-//     \amp, ~twisterBusses[0].asMap,
-//     \outGainCtl, ~twisterBusses[4].asMap,
-// ]);
+~sourceMaps.do { |source, sourceIndex|
+    ~applyTwisterMap.(
+        source[\map],
+        sourceIndex,
+        source[\name].asString
+    );
+};
 )
 ```
 
-### Several synths (one per Twister column)
+Several source entries use separate Twister columns:
 
-Use several `(name:, map:)` entries in the same list. The `.do` index is the column (`0` → knobs `0,4,8,12`, `1` → `1,5,9,13`, etc.):
-
-```supercollider
-~myMaps.do { |item, i|
-	~applyTwisterMap.(item[\map], i, item[\name].asString);
-};
-// Synth(~myMaps[idx][\name], ...) when triggering by column/button index
-```
+- Source `0` uses knobs `0`, `4`, `8`, and `12`
+- Source `1` uses knobs `1`, `5`, `9`, and `13`
+- Source `2` uses knobs `2`, `6`, `10`, and `14`
+- Source `3` uses knobs `3`, `7`, `11`, and `15`
 
 ## Helpers
 
 ```supercollider
 ~enableAllTwisterStatus.();
 ~disableAllTwisterStatus.();
-~enableSpectraStatus.(8);   // first N Spectra status buttons on
+
+~enableSpectraStatus.(8);
 ~disableAllSpectraStatus.();
 
-~applyTwisterMap.(list, col, colName); // preferred: labels + display ranges for one column
+~applyTwisterMap.(list, sourceIndex, sourceName);
 
-// Lower-level (used inside ~applyTwisterMap; available if needed):
-~labelTwisterColumn.(col, "name");     // col 0–3
-~labelTwisterKnob.(num, "name");       // num 0–15
-~setTwisterDisplayRange.(num, min, max);
+~labelTwisterColumn.(sourceIndex, "name");
+~labelTwisterKnob.(knobIndex, "name");
+~setTwisterDisplayRange.(knobIndex, min, max);
 ```
 
 ## Notes
 
-- Twister knobs are often grouped by column: `0,4,8,12` / `1,5,9,13` / `2,6,10,14` / `3,7,11,15`.
-- Control-bus values use a normalized range of `0.0` to `1.0`. A map’s `min` and `max` only change the range shown in the GUI number box; they do not rescale the bus value.
-- Preferred labeling pattern: use a single map list containing `(name:, map:)` entries, then apply it with `~applyTwisterMap` in a `.do`.
-- `name` should match the SynthDef symbol if you create synths with `Synth(~myMaps[n][\name], ...)`.
-- Press a Twister encoder (Note Toggle), click its status button, or use the helper functions to enable/disable it.
-
+- Control-bus values always use the normalized range `0.0` to `1.0`
+- A map’s `min` and `max` change only the range shown in the GUI number box and do not rescale the bus value
+- `name` should match the SynthDef symbol when triggering a source with `Synth(~sourceMaps[index][\name], ...)`
+- Use source names that fit comfortably in the column-label and Spectra status-label areas
