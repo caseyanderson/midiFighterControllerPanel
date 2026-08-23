@@ -13,22 +13,37 @@
 ~twisterLastValue = Array.fill(16, -1);
 ~twisterLastBusValue = Array.fill(16, 0.0);
 ~twisterLastSetTime = Array.fill(16, -999999.0);
-~twisterStatus = Array.fill(16, 0);
+~controllerPanelInitialConfig = ~controllerPanelInitialConfig ? ();
+~controllerInitialTwisterActive =
+~controllerPanelInitialConfig[\twisterActive] ? [];
+~controllerInitialSpectraActive =
+~controllerPanelInitialConfig[\spectraActive] ? [];
+~twisterStatus = Array.fill(16, { |index|
+    ~controllerInitialTwisterActive.includes(index).asInteger
+});
 ~twisterActiveLED = 85; // red-ish
 ~spectraLastValue = Array.fill(16, -1);
-~spectraStatus = Array.fill(16, 0);
+~spectraStatus = Array.fill(16, { |index|
+    ~controllerInitialSpectraActive.includes(index).asInteger
+});
 ~spectraInactiveLED = 7;
 ~spectraActiveLED = 13;
 ~spectraPressedLED = 37; // bright yellow
 ~twisterData = Dictionary.new;
 ~spectraData = Dictionary.new;
+~controllerPanelDeferOpen = ~controllerPanelDeferOpen ? false;
+~controllerPanelIsDeferred = ~controllerPanelDeferOpen;
+~controllerPanelDeferOpen = nil;
 
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │ PANEL CONFIGURATION │
 // └─────────────────────────────────────────────────────────────────────────────┘
-~controllerPanelMode = ~controllerPanelInitialMode ? \prototype;
-~controllerPanelControllers = ~controllerPanelInitialControllers ? \both;
+~controllerPanelMode = ~controllerPanelInitialConfig[\mode]
+? (~controllerPanelInitialMode ? \prototype);
+~controllerPanelControllers = ~controllerPanelInitialConfig[\controllers]
+? (~controllerPanelInitialControllers ? \both);
 ~controllerPanelScale = 0.75;
+~controllerPanelInitialConfig = nil;
 ~controllerPanelInitialMode = nil;
 ~controllerPanelInitialControllers = nil;
 ~controllerPerformanceContent = nil;
@@ -50,7 +65,9 @@
 ~twisterDisplayMaxes = Array.fill(16, 1.0);
 
 ~refreshControllerPanel = {
-    ~makeCombinedPanel.tryPerform(\value);
+    if(~controllerPanelIsDeferred.not, {
+        ~makeCombinedPanel.tryPerform(\value);
+    });
 };
 
 ~setControllerPanelMode = { |mode = \prototype|

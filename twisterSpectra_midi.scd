@@ -126,7 +126,11 @@ if(~twisterUID.notNil, {
 
 	if(~twisterLEDOut.notNil, {
 		~knobs.do { |note|
-			~twisterLEDOut.noteOff(1, note, 0);
+			if(~twisterStatus[note] == 1, {
+				~twisterLEDOut.noteOn(1, note, ~twisterActiveLED);
+			}, {
+				~twisterLEDOut.noteOff(1, note, 0);
+			});
 		};
 	});
 });
@@ -202,7 +206,14 @@ if(~spectraUID.notNil, {
 
 	if(~spectraLEDOut.notNil, {
 		~buttons.do { |idx|
-			~setSpectraLED.(idx, ~spectraInactiveLED);
+			~setSpectraLED.(
+				idx,
+				if(
+					~spectraStatus[idx] == 1,
+					~spectraActiveLED,
+					~spectraInactiveLED
+				)
+			);
 		};
 	});
 });

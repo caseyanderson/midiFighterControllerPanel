@@ -28,7 +28,7 @@
     "All Spectra GUI status buttons → DISABLED (OFF)".postln;
 };
 ~labelTwisterKnob = { |num, name|
-    var strip = ~twisterData[\twisterStrips][num];
+    var strip = ~twisterData[\twisterStrips].tryPerform(\at, num);
     ~twisterLabels[num] = name;
     if(strip.notNil, {
         if(strip[\button].notNil, {
@@ -46,7 +46,7 @@
     });
 };
 ~setTwisterDisplayRange = { |num, min = 0.0, max = 1.0|
-    var strip = ~twisterData[\twisterStrips][num];
+    var strip = ~twisterData[\twisterStrips].tryPerform(\at, num);
     ~twisterDisplayMins[num] = min;
     ~twisterDisplayMaxes[num] = max;
     if(strip.notNil, {
@@ -66,7 +66,7 @@
     });
 };
 ~labelSpectraButton = { |num, name|
-    var strip = ~spectraData[\spectraStrips][num];
+    var strip = ~spectraData[\spectraStrips].tryPerform(\at, num);
     ~spectraLabels[num] = name;
     if(strip.notNil, {
         if(strip[\button1].notNil, {

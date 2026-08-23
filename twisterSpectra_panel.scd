@@ -213,7 +213,11 @@
                 var stageHeight, stageWidth;
 
                 notchX = controlWidth + gap;
-                notchY = spectraHeight + gap;
+                notchY = if(sourceSpectra.notEmpty, {
+                    spectraHeight + gap;
+                }, {
+                    0;
+                });
 
                 stageWidth = notchX + meterColumnWidth;
                 stageHeight = notchY
@@ -247,7 +251,7 @@
                         notchX,
                         0,
                         content[\meterWidth],
-                        content[\meterHeight]
+                        stageHeight
                     )
                 );
 
