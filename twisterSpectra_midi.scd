@@ -56,7 +56,7 @@ if(~twisterUID.notNil, {
 						{
 							var strip = ~twisterData[\twisterStrips][i];
 
-							if(strip.notNil && strip[\button].value == 1, {
+                            if(strip.notNil && ~twisterStatus[i] == 1, {
 								strip[\knob].valueAction_(mappedVal);
 								~synthControl.sendMsg('/knobControl', i, mappedVal);
 							});
@@ -70,27 +70,46 @@ if(~twisterUID.notNil, {
 	~setTwisterStatus = { |note, isActive|
 		var status = isActive.asInteger;
 
-		~twisterStatus[note] = status;
+		if(~controllerPanelMode != \performance, {
+			~twisterStatus[note] = status;
 
-		if(~twisterLEDOut.notNil, {
-			if(status == 1, {
-				~twisterLEDOut.noteOn(1, note, ~twisterActiveLED);
-			}, {
-				~twisterLEDOut.noteOff(1, note, 0);
+			if(~twisterLEDOut.notNil, {
+				if(status == 1, {
+					~twisterLEDOut.noteOn(1, note, ~twisterActiveLED);
+				}, {
+					~twisterLEDOut.noteOff(1, note, 0);
+				});
 			});
+
+			{
+				var strip = ~twisterData[\twisterStrips][note];
+
+            if(strip.notNil, {
+                if(strip[\button].notNil, {
+                    strip[\button].value_(status);
+                });
+            });
+
+            if(status == 1, {
+                var currentValue = ~twisterBusses[note].getSynchronous;
+
+                ~twisterLastBusValue[note] = currentValue;
+
+                if(strip.notNil, {
+                    if(strip[\knob].notNil, {
+                        strip[\knob].value_(currentValue);
+                        strip[\number2].value_(currentValue.linlin(
+                            0, 1,
+                            strip[\dispMin] ? 0.0,
+                            strip[\dispMax] ? 1.0
+                        ));
+                    });
+                });
+            });
+
+			}.defer;
 		});
-
-		{
-			var strip = ~twisterData[\twisterStrips][note];
-
-			if(strip.notNil && strip[\button].notNil, {
-				strip[\button].value_(status);
-			});
-
-			if(status == 0, {
-				~twisterBusses[note].set(0.0);
-			});
-		}.defer;
+		nil;
 	};
 
 	~twisterNoteOnFunc = MIDIFunc.noteOn({ |vel, note, chan, src|
@@ -107,7 +126,11 @@ if(~twisterUID.notNil, {
 
 	if(~twisterLEDOut.notNil, {
 		~knobs.do { |note|
-			~twisterLEDOut.noteOff(1, note, 0);
+			if(~twisterStatus[note] == 1, {
+				~twisterLEDOut.noteOn(1, note, ~twisterActiveLED);
+			}, {
+				~twisterLEDOut.noteOff(1, note, 0);
+			});
 		};
 	});
 });
@@ -126,23 +149,29 @@ if(~spectraUID.notNil, {
 	~setSpectraStatus = { |idx, isActive|
 		var status = isActive.asInteger;
 
-		~spectraStatus[idx] = status;
-		~setSpectraLED.(
-			idx,
-			if(status == 1, ~spectraActiveLED, ~spectraInactiveLED)
-		);
+		if(~controllerPanelMode != \performance, {
+			~spectraStatus[idx] = status;
+			~setSpectraLED.(
+				idx,
+				if(status == 1, ~spectraActiveLED, ~spectraInactiveLED)
+			);
 
-		{
-			var strip = ~spectraData[\spectraStrips][idx];
+			{
+				var strip = ~spectraData[\spectraStrips][idx];
 
-			if(strip.notNil && strip[\button1].notNil, {
-				strip[\button1].value_(status);
+            if(strip.notNil, {
+                if(strip[\button1].notNil, {
+                    strip[\button1].value_(status);
 
-				if(status == 0, {
-					strip[\button2].valueAction_(0);
-				});
-			});
-		}.defer;
+                    if(status == 0, {
+                        strip[\button2].valueAction_(0);
+                    });
+                });
+            });
+
+			}.defer;
+		});
+		nil;
 	};
 
 	~spectraCCFunc = MIDIFunc.cc({ |val, cc, chan, src|
@@ -166,7 +195,7 @@ if(~spectraUID.notNil, {
 				AppClock.sched(0, {
 					var strip = ~spectraData[\spectraStrips][idx];
 
-					if(strip.notNil && strip[\button1].value == 1, {
+                    if(strip.notNil && ~spectraStatus[idx] == 1, {
 						strip[\button2].valueAction_(mappedVal);
 						~synthControl.sendMsg('/buttonControl', idx, mappedVal);
 					});
@@ -177,7 +206,14 @@ if(~spectraUID.notNil, {
 
 	if(~spectraLEDOut.notNil, {
 		~buttons.do { |idx|
-			~setSpectraLED.(idx, ~spectraInactiveLED);
+			~setSpectraLED.(
+				idx,
+				if(
+					~spectraStatus[idx] == 1,
+					~spectraActiveLED,
+					~spectraInactiveLED
+				)
+			);
 		};
 	});
 });

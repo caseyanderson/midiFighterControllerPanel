@@ -28,18 +28,27 @@
     "All Spectra GUI status buttons → DISABLED (OFF)".postln;
 };
 ~labelTwisterKnob = { |num, name|
-    var strip = ~twisterData[\twisterStrips][num];
-    if(strip.notNil && strip[\button].notNil, {
-        strip[\label] = name;
-        strip[\button].states_([
-            [name, Color.black, Color.gray],
-            [name, Color.white, Color.red]
-        ]);
-        strip[\button].refresh;
+    var strip = ~twisterData[\twisterStrips].tryPerform(\at, num);
+    ~twisterLabels[num] = name;
+    if(strip.notNil, {
+        if(strip[\button].notNil, {
+            if(~controllerPanelMode == \prototype, {
+                strip[\button].states_([
+                    [name, Color.black, Color.gray],
+                    [name, Color.white, Color.red]
+                ]);
+                strip[\button].value_(~twisterStatus[num]);
+            }, {
+                strip[\button].string_(name);
+            });
+            strip[\button].refresh;
+        });
     });
 };
 ~setTwisterDisplayRange = { |num, min = 0.0, max = 1.0|
-    var strip = ~twisterData[\twisterStrips][num];
+    var strip = ~twisterData[\twisterStrips].tryPerform(\at, num);
+    ~twisterDisplayMins[num] = min;
+    ~twisterDisplayMaxes[num] = max;
     if(strip.notNil, {
         strip[\dispMin] = min;
         strip[\dispMax] = max;
@@ -51,18 +60,27 @@
     });
 };
 ~labelTwisterColumn = { |col, name|
+    ~twisterColumnNames[col] = name;
     if(~twisterColumnLabels.notNil, {
         ~twisterColumnLabels[col].string_(name);
     });
 };
 ~labelSpectraButton = { |num, name|
-    var strip = ~spectraData[\spectraStrips][num];
-    if(strip.notNil && strip[\button1].notNil, {
-        strip[\button1].states_([
-            [name, Color.black, Color.gray],
-            [name, Color.white, Color.red]
-        ]);
-        strip[\button1].refresh;
+    var strip = ~spectraData[\spectraStrips].tryPerform(\at, num);
+    ~spectraLabels[num] = name;
+    if(strip.notNil, {
+        if(strip[\button1].notNil, {
+            if(~controllerPanelMode == \prototype, {
+                strip[\button1].states_([
+                    [name, Color.black, Color.gray],
+                    [name, Color.white, Color.red]
+                ]);
+                strip[\button1].value_(~spectraStatus[num]);
+            }, {
+                strip[\button1].string_(name);
+            });
+            strip[\button1].refresh;
+        });
     });
 };
 ~applyTwisterMap = { |list, col, colName|

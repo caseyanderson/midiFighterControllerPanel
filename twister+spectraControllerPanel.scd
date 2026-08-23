@@ -49,25 +49,34 @@ s.waitForBoot({
 	(~controllerDir +/+ "twisterSpectra_init.scd").load;
 	(~controllerDir +/+ "twisterSpectra_layouts.scd").load;
 	(~controllerDir +/+ "twisterSpectra_panel.scd").load;
-	~makeCombinedPanel.value;
-	(~controllerDir +/+ "twisterSpectra_knobActions.scd").load;
-	(~controllerDir +/+ "twisterSpectra_midi.scd").load;
 
-~combinedPanel.onClose_({
-	s.freeAll;
+	~controllerPanelCleanup = {
+		s.freeAll;
 
-	~kbSampleOn.free;
-	~kbSampleOff.free;
-	~kbSampleNotes = Array.newClear(128);
+		~kbSampleOn.free;
+		~kbSampleOff.free;
+		~kbSampleNotes = Array.newClear(128);
 
-	~twisterCCFuncs.do(_.free);
-	~twisterNoteOnFunc.free;
-	~twisterNoteOffFunc.free;
-	~spectraCCFunc.free;
+		~twisterCCFuncs.do(_.free);
+		~twisterNoteOnFunc.free;
+		~twisterNoteOffFunc.free;
+		~spectraCCFunc.free;
 
-	~twisterBusses.do(_.free);
-	~spectraBusses.do(_.free);
-	MIDIIn.disconnectAll;
-});
+		~twisterBusses.do(_.free);
+		~spectraBusses.do(_.free);
+		MIDIIn.disconnectAll;
+	};
+
+	~openControllerPanel = {
+		~controllerPanelIsDeferred = false;
+		~makeCombinedPanel.value;
+		(~controllerDir +/+ "twisterSpectra_knobActions.scd").load;
+		(~controllerDir +/+ "twisterSpectra_midi.scd").load;
+		~combinedPanel.onClose_(~controllerPanelCleanup);
+	};
+
+	if(~controllerPanelIsDeferred.not, {
+		~openControllerPanel.();
+	});
 });
 )

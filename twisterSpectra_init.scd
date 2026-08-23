@@ -13,15 +13,81 @@
 ~twisterLastValue = Array.fill(16, -1);
 ~twisterLastBusValue = Array.fill(16, 0.0);
 ~twisterLastSetTime = Array.fill(16, -999999.0);
-~twisterStatus = Array.fill(16, 0);
+~controllerPanelInitialConfig = ~controllerPanelInitialConfig ? ();
+~controllerInitialTwisterActive =
+~controllerPanelInitialConfig[\twisterActive] ? [];
+~controllerInitialSpectraActive =
+~controllerPanelInitialConfig[\spectraActive] ? [];
+~twisterStatus = Array.fill(16, { |index|
+    ~controllerInitialTwisterActive.includes(index).asInteger
+});
 ~twisterActiveLED = 85; // red-ish
 ~spectraLastValue = Array.fill(16, -1);
-~spectraStatus = Array.fill(16, 0);
+~spectraStatus = Array.fill(16, { |index|
+    ~controllerInitialSpectraActive.includes(index).asInteger
+});
 ~spectraInactiveLED = 7;
 ~spectraActiveLED = 13;
 ~spectraPressedLED = 37; // bright yellow
 ~twisterData = Dictionary.new;
 ~spectraData = Dictionary.new;
+~controllerPanelDeferOpen = ~controllerPanelDeferOpen ? false;
+~controllerPanelIsDeferred = ~controllerPanelDeferOpen;
+~controllerPanelDeferOpen = nil;
+
+// ┌─────────────────────────────────────────────────────────────────────────────┐
+// │ PANEL CONFIGURATION │
+// └─────────────────────────────────────────────────────────────────────────────┘
+~controllerPanelMode = ~controllerPanelInitialConfig[\mode]
+? (~controllerPanelInitialMode ? \prototype);
+~controllerPanelControllers = ~controllerPanelInitialConfig[\controllers]
+? (~controllerPanelInitialControllers ? \both);
+~controllerPanelScale = 0.75;
+~controllerPanelInitialConfig = nil;
+~controllerPanelInitialMode = nil;
+~controllerPanelInitialControllers = nil;
+~controllerPerformanceContent = nil;
+~controllerPerformanceSourceContent = Dictionary.new;
+~controllerPanelModeHook = nil;
+
+~setControllerPerformanceSourceContent = { |sourceName, contentFunction|
+    ~controllerPerformanceSourceContent[sourceName.asSymbol] = contentFunction;
+};
+
+~clearControllerPerformanceSourceContent = {
+    ~controllerPerformanceSourceContent.clear;
+};
+
+~twisterLabels = Array.fill(16, { |index| "KNOB " ++ index });
+~spectraLabels = Array.fill(16, { |index| "BUTTON " ++ index });
+~twisterColumnNames = Array.fill(4, "");
+~twisterDisplayMins = Array.fill(16, 0.0);
+~twisterDisplayMaxes = Array.fill(16, 1.0);
+
+~refreshControllerPanel = {
+    if(~controllerPanelIsDeferred.not, {
+        ~makeCombinedPanel.tryPerform(\value);
+    });
+};
+
+~setControllerPanelMode = { |mode = \prototype|
+    if([\prototype, \performance].includes(mode), {
+        ~controllerPanelMode = mode;
+        ~controllerPanelModeHook.tryPerform(\value, mode);
+        ~refreshControllerPanel.();
+    }, {
+        "Panel mode must be \\prototype or \\performance.".warn;
+    });
+};
+
+~setControllerPanelControllers = { |controllers = \both|
+    if([\twister, \spectra, \both].includes(controllers), {
+        ~controllerPanelControllers = controllers;
+        ~refreshControllerPanel.();
+    }, {
+        "Controller view must be \\twister, \\spectra, or \\both.".warn;
+    });
+};
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │ CONTROL BUSSES │
 // └─────────────────────────────────────────────────────────────────────────────┘
