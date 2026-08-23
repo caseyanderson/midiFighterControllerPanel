@@ -287,11 +287,11 @@
 
             channelBody = HLayout(*(
                 (if(twisterColumn.notNil, {
-                    [[twisterColumn, stretch: 0]];
+                    [[twisterColumn, stretch: 0, align: \top]];
                 }, {
                     [];
                 })) ++ (if(rightColumn.notNil, {
-                    [[rightColumn, stretch: 0]];
+                    [[rightColumn, stretch: 0, align: \top]];
                 }, {
                     [];
                 })) ++ [nil]
