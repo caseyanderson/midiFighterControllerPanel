@@ -22,6 +22,55 @@
 ~spectraPressedLED = 37; // bright yellow
 ~twisterData = Dictionary.new;
 ~spectraData = Dictionary.new;
+
+// ┌─────────────────────────────────────────────────────────────────────────────┐
+// │ PANEL CONFIGURATION │
+// └─────────────────────────────────────────────────────────────────────────────┘
+~controllerPanelMode = ~controllerPanelInitialMode ? \prototype;
+~controllerPanelControllers = ~controllerPanelInitialControllers ? \both;
+~controllerPanelScale = 0.75;
+~controllerPanelInitialMode = nil;
+~controllerPanelInitialControllers = nil;
+~controllerPerformanceContent = nil;
+~controllerPerformanceSourceContent = Dictionary.new;
+~controllerPanelModeHook = nil;
+
+~setControllerPerformanceSourceContent = { |sourceName, contentFunction|
+    ~controllerPerformanceSourceContent[sourceName.asSymbol] = contentFunction;
+};
+
+~clearControllerPerformanceSourceContent = {
+    ~controllerPerformanceSourceContent.clear;
+};
+
+~twisterLabels = Array.fill(16, { |index| "KNOB " ++ index });
+~spectraLabels = Array.fill(16, { |index| "BUTTON " ++ index });
+~twisterColumnNames = Array.fill(4, "");
+~twisterDisplayMins = Array.fill(16, 0.0);
+~twisterDisplayMaxes = Array.fill(16, 1.0);
+
+~refreshControllerPanel = {
+    ~makeCombinedPanel.tryPerform(\value);
+};
+
+~setControllerPanelMode = { |mode = \prototype|
+    if([\prototype, \performance].includes(mode), {
+        ~controllerPanelMode = mode;
+        ~controllerPanelModeHook.tryPerform(\value, mode);
+        ~refreshControllerPanel.();
+    }, {
+        "Panel mode must be \\prototype or \\performance.".warn;
+    });
+};
+
+~setControllerPanelControllers = { |controllers = \both|
+    if([\twister, \spectra, \both].includes(controllers), {
+        ~controllerPanelControllers = controllers;
+        ~refreshControllerPanel.();
+    }, {
+        "Controller view must be \\twister, \\spectra, or \\both.".warn;
+    });
+};
 // ┌─────────────────────────────────────────────────────────────────────────────┐
 // │ CONTROL BUSSES │
 // └─────────────────────────────────────────────────────────────────────────────┘
