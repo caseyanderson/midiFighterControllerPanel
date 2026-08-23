@@ -98,8 +98,6 @@
 		.hSpacing_(~controllerPanelSize.(10))
 		.vSpacing_(~controllerPanelSize.(10));
 
-		// Twister has a column-label row above its prototype grid. Give
-		// Spectra the same blank row so every status button shares a baseline.
 		spectraLayout = if(~controllerPanelMode == \prototype, {
 			VLayout(
 				[
