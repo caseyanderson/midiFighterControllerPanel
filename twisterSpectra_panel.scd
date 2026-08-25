@@ -198,7 +198,7 @@
             });
 
             rightColumn = if(content.notNil and: {
-                content.tryPerform(\at, \type) == \gainStage
+                content.tryPerform(\at, \type) == \gainStageDoctor
             }, {
                 var gap = ~controllerPanelSize.(10);
                 var controlWidth = content[\controlWidth];
@@ -313,7 +313,7 @@
             ));
 
             if(content.notNil and: {
-                content.tryPerform(\at, \type) == \gainStage
+                content.tryPerform(\at, \type) == \gainStageDoctor
             }, {
                 channelStrip.fixedWidth_(
                     (if(sourceTwister.notEmpty, {
