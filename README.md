@@ -8,7 +8,7 @@ SuperCollider tools for the MIDI Fighter Twister + Spectra: GUI, control busses,
 - MIDI Fighter Twister
 - MIDI Fighter Spectra
 - **Windows:** VoiceMeeter Virtual ASIO
-- **Mac:** BlackHole 16ch
+- **Mac:** An aggregate device named `BlackHole + MixPre`, with BlackHole 16ch followed by MixPre-3M
 
 ## Setup
 
@@ -21,7 +21,7 @@ Clone this repository into your home directory as `midiFighterControllerPanel`, 
 )
 ```
 
-The panel automatically selects the configured Windows or macOS audio device
+The panel selects Voicemeeter Virtual ASIO on Windows and the `BlackHole + MixPre` aggregate device on macOS
 
 ## Controller configuration
 

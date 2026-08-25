@@ -6,7 +6,7 @@ Twister: CC 0-15, Channel 1 (chan=0)
 Spectra: CC 36-51, Channel 4 (chan=3)
 
 On Windows: connects to Voicemeeter Virtual ASIO
-on Mac: connects to Blackhole 16ch
+On Mac: connects to the BlackHole + MixPre aggregate device
 
 Usage Example (from another file startup block)
 ~homeDir = Platform.userHomeDir;
@@ -31,7 +31,7 @@ s = Server.default;
 ///////// Server Connection for Mac / Windows
 
 ~serverConfig = (
-	mac: (device: "BlackHole 16ch", numOutputBusChannels: 16),
+	mac: (device: "BlackHole + MixPre", numOutputBusChannels: 16),
 	windows: (device: "ASIO : Voicemeeter Virtual ASIO", numOutputBusChannels: 8)
 )[~platform];
 
