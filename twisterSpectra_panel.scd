@@ -167,7 +167,7 @@
             var channelBody, channelStrip, channelTitle, content;
             var gainParts, gainStageView, notchX, notchY;
             var placeGainStageChildren;
-            var performanceSpectraStrip;
+            var performanceSpectraStrips;
             var rightColumn, sourceSpectra, sourceTwister, spectraColumn, twisterColumn;
 
             sourceTwister = twisterIndices.select { |index|
@@ -203,8 +203,11 @@
                 var gap = ~controllerPanelSize.(10);
                 var controlWidth = content[\controlWidth];
                 var meterColumnWidth = content[\meterColumnWidth];
+                var spectraControlHeight =
+                ~controllerPanelSize.(160);
                 var spectraHeight = if(sourceSpectra.notEmpty, {
-                    ~controllerPanelSize.(160);
+                    (spectraControlHeight * sourceSpectra.size)
+                    + (gap * (sourceSpectra.size - 1))
                 }, {
                     0;
                 });
@@ -227,13 +230,26 @@
                 .fixedSize_(stageWidth @ stageHeight);
 
                 if(sourceSpectra.notEmpty, {
-                    performanceSpectraStrip = ~spectraLayout.(
-                        sourceSpectra[0],
-                        gainStageView,
-                        Rect(0, 0, controlWidth, spectraHeight)
-                    );
-                    spectraStrips[sourceSpectra[0]] = performanceSpectraStrip;
-                    ~spectraData[\spectraStrips][sourceSpectra[0]] = performanceSpectraStrip;
+                    performanceSpectraStrips =
+                    sourceSpectra.collect { |index, itemIndex|
+                        var strip;
+
+                        strip = ~spectraLayout.(
+                            index,
+                            gainStageView,
+                            Rect(
+                                0,
+                                itemIndex * (spectraControlHeight + gap),
+                                controlWidth,
+                                spectraControlHeight
+                            )
+                        );
+
+                        spectraStrips[index] = strip;
+                        ~spectraData[\spectraStrips][index] = strip;
+
+                        strip
+                    };
                 });
 
                 gainParts = content[\build].(
@@ -254,10 +270,17 @@
                 );
 
                 placeGainStageChildren = {
-                    if(performanceSpectraStrip.notNil, {
-                        performanceSpectraStrip[\layout].bounds_(
-                            Rect(0, 0, controlWidth, spectraHeight)
-                        );
+                    if(performanceSpectraStrips.notNil, {
+                        performanceSpectraStrips.do {
+                            |strip, itemIndex|
+
+                            strip[\layout].bounds_(Rect(
+                                0,
+                                itemIndex * (spectraControlHeight + gap),
+                                controlWidth,
+                                spectraControlHeight
+                            ));
+                        };
                     });
 
                     gainParts[\makeup].bounds_(

@@ -58,7 +58,6 @@ if(~twisterUID.notNil, {
 
                             if(strip.notNil && ~twisterStatus[i] == 1, {
 								strip[\knob].valueAction_(mappedVal);
-								~synthControl.sendMsg('/knobControl', i, mappedVal);
 							});
 						}.defer;
 					});
@@ -146,6 +145,51 @@ if(~spectraUID.notNil, {
 		});
 	};
 
+	~setSpectraButtonActive = { |idx, isActive|
+		var active = isActive.asInteger;
+
+		~spectraButtonActive[idx] = active;
+
+		~setSpectraLED.(
+			idx,
+			if(~spectraStatus[idx] == 1, {
+				if(
+					active == 1,
+					~spectraPressedLED,
+					~spectraActiveLED
+				)
+			}, {
+				~spectraInactiveLED
+			})
+		);
+
+		{
+			var strip = ~spectraData[\spectraStrips][idx];
+
+			if(
+				strip.notNil
+				and: { strip[\button2].notNil },
+				{
+					strip[\button2].value_(active);
+				}
+			);
+		}.defer;
+
+		nil;
+	};
+
+	~completeSpectraButton = { |idx|
+		if(
+			idx.inclusivelyBetween(0, 15)
+			and: { ~spectraDeterministic[idx] },
+			{
+				~setSpectraButtonActive.(idx, false);
+			}
+		);
+
+		nil;
+	};
+
 	~setSpectraStatus = { |idx, isActive|
 		var status = isActive.asInteger;
 
@@ -164,6 +208,8 @@ if(~spectraUID.notNil, {
                     strip[\button1].value_(status);
 
                     if(status == 0, {
+                        ~spectraToggleValue[idx] = 0;
+						~spectraButtonActive[idx] = 0;
                         strip[\button2].valueAction_(0);
                     });
                 });
@@ -183,21 +229,100 @@ if(~spectraUID.notNil, {
 			if(~spectraLastValue[idx].isNil || mappedVal != ~spectraLastValue[idx], {
 				~spectraLastValue[idx] = mappedVal;
 
-				if(~spectraStatus[idx] == 1, {
-					~setSpectraLED.(
-						idx,
-						if(mappedVal == 1, ~spectraPressedLED, ~spectraActiveLED)
+				if(~spectraToggle[idx], {
+					if(
+						mappedVal == 1
+						and: { ~spectraStatus[idx] == 1 },
+						{
+							~spectraToggleValue[idx] =
+							1 - ~spectraToggleValue[idx];
+
+							~setSpectraLED.(
+								idx,
+								if(
+									~spectraToggleValue[idx] == 1,
+									~spectraPressedLED,
+									~spectraActiveLED
+								)
+							);
+
+							AppClock.sched(0, {
+								var strip =
+								~spectraData[\spectraStrips][idx];
+
+								if(strip.notNil, {
+									strip[\button2]
+									.value_(~spectraToggleValue[idx]);
+
+									~synthControl.sendMsg(
+										'/buttonControl',
+										idx,
+										~spectraToggleValue[idx]
+									);
+								});
+							});
+						}
 					);
+
+					if(~spectraStatus[idx] == 0, {
+						~setSpectraLED.(idx, ~spectraInactiveLED);
+					});
 				}, {
-					~setSpectraLED.(idx, ~spectraInactiveLED);
-				});
+					if(~spectraDeterministic[idx], {
+						if(~spectraStatus[idx] == 1, {
+							if(
+								mappedVal == 1
+								and: { ~spectraButtonActive[idx] == 0 },
+								{
+									~setSpectraButtonActive.(idx, true);
+									~synthControl.sendMsg(
+										'/buttonControl',
+										idx,
+										1
+									);
+								}
+							);
 
-				AppClock.sched(0, {
-					var strip = ~spectraData[\spectraStrips][idx];
+							if(mappedVal == 0, {
+								~synthControl.sendMsg(
+									'/buttonControl',
+									idx,
+									0
+								);
+							});
+						}, {
+							~setSpectraLED.(idx, ~spectraInactiveLED);
+						});
+					}, {
+						if(~spectraStatus[idx] == 1, {
+							~setSpectraLED.(
+								idx,
+								if(
+									mappedVal == 1,
+									~spectraPressedLED,
+									~spectraActiveLED
+								)
+							);
+						}, {
+							~setSpectraLED.(idx, ~spectraInactiveLED);
+						});
 
-                    if(strip.notNil && ~spectraStatus[idx] == 1, {
-						strip[\button2].valueAction_(mappedVal);
-						~synthControl.sendMsg('/buttonControl', idx, mappedVal);
+						AppClock.sched(0, {
+							var strip = ~spectraData[\spectraStrips][idx];
+
+							if(
+								strip.notNil
+								and: { ~spectraStatus[idx] == 1 },
+								{
+									strip[\button2].valueAction_(mappedVal);
+									~synthControl.sendMsg(
+										'/buttonControl',
+										idx,
+										mappedVal
+									);
+								}
+							);
+						});
 					});
 				});
 			});

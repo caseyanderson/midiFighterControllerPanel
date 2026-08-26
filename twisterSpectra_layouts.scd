@@ -93,7 +93,15 @@
         ["OFF", Color.black, Color.gray],
         ["ON", Color.white, Color.red]
     ])
-    .value_(0);
+    .value_(if(
+        ~spectraToggle[buttonNum],
+        ~spectraToggleValue[buttonNum],
+        if(
+            ~spectraDeterministic[buttonNum],
+            ~spectraButtonActive[buttonNum],
+            0
+        )
+    ));
 
     hidePerformanceLabel = ~controllerPanelMode == \performance;
 

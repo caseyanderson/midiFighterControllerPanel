@@ -18,11 +18,33 @@
 ~controllerPanelInitialConfig[\twisterActive] ? [];
 ~controllerInitialSpectraActive =
 ~controllerPanelInitialConfig[\spectraActive] ? [];
+~controllerInitialSpectraToggle =
+~controllerPanelInitialConfig[\spectraToggle] ? [];
+~controllerInitialSpectraDeterministic =
+~controllerPanelInitialConfig[\spectraDeterministic] ? [];
+if(
+    ~controllerInitialSpectraToggle.any { |index|
+        ~controllerInitialSpectraDeterministic.includes(index)
+    },
+    {
+        Error(
+            "A Spectra button cannot be both toggle and deterministic."
+        ).throw;
+    }
+);
 ~twisterStatus = Array.fill(16, { |index|
     ~controllerInitialTwisterActive.includes(index).asInteger
 });
 ~twisterActiveLED = 85; // red-ish
 ~spectraLastValue = Array.fill(16, -1);
+~spectraToggle = Array.fill(16, { |index|
+    ~controllerInitialSpectraToggle.includes(index)
+});
+~spectraToggleValue = Array.fill(16, 0);
+~spectraDeterministic = Array.fill(16, { |index|
+    ~controllerInitialSpectraDeterministic.includes(index)
+});
+~spectraButtonActive = Array.fill(16, 0);
 ~spectraStatus = Array.fill(16, { |index|
     ~controllerInitialSpectraActive.includes(index).asInteger
 });

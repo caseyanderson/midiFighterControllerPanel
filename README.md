@@ -42,7 +42,8 @@ Set the initial panel configuration before loading the startup file:
     mode: \prototype,
     controllers: \both,
     twisterActive: [],
-    spectraActive: []
+    spectraActive: [],
+    spectraDeterministic: []
 );
 
 ~controllerDir =
@@ -90,12 +91,15 @@ Configure the initial performance state before loading the panel:
 ~controllerPanelInitialConfig = (
     mode: \performance,
     controllers: \both,
-    twisterActive: [0, 4, 8],
-    spectraActive: [0]
+    twisterActive: [0, 1],
+    spectraActive: [0, 1],
+    spectraDeterministic: [1]
 );
 ```
 
 `twisterActive` and `spectraActive` use indices from `0` through `15`.
+
+`spectraDeterministic` lists active Spectra buttons whose state remains active until completion is reported.
 
 Switch a running panel to performance mode:
 
@@ -162,7 +166,11 @@ Twister control buses contain normalized values from `0.0` to `1.0`. Mapping `mi
 
 ~enableSpectraStatus.(8);
 ~disableAllSpectraStatus.();
+
+~completeSpectraButton.(1);
 ```
+
+Call `~completeSpectraButton` when the work associated with a deterministic Spectra button has completed.
 
 ## Mapping and label helpers
 
@@ -184,7 +192,7 @@ Set the Spectra LED values in `twisterSpectra_init.scd`:
 ~spectraPressedLED = 37;
 ```
 
-Active Spectra controls appear red while idle and yellow while held.
+Active Spectra controls appear red while idle and yellow while active.
 
 ## Verify the panel
 
