@@ -35,7 +35,7 @@ Connect the controllers before loading the panel.
 
 ## Load the panel directly
 
-Set the initial panel configuration before loading the startup file:
+For a direct standalone test, evaluate this block in a SuperCollider document before loading `twister+spectraControllerPanel.scd`. In a project based on projectTemplate, define `~controllerPanelInitialConfig` in `project_config.scd`.
 
 ```supercollider
 ~controllerPanelInitialConfig = (
@@ -43,6 +43,7 @@ Set the initial panel configuration before loading the startup file:
     controllers: \both,
     twisterActive: [],
     spectraActive: [],
+    spectraToggle: [],
     spectraDeterministic: []
 );
 
@@ -59,7 +60,7 @@ Set the initial panel configuration before loading the startup file:
 - `\spectra`
 - `\both`
 
-The startup file selects Voicemeeter Virtual ASIO on Windows and the `BlackHole + MixPre` aggregate device on macOS.
+The startup file selects `Voicemeeter Virtual ASIO` on Windows and the `BlackHole + MixPre` aggregate device on macOS.
 
 ## Prototype mode
 
@@ -85,7 +86,7 @@ Change the visible controllers:
 
 Performance mode displays only the configured active controls and prevents activation changes from the performance interface.
 
-Configure the initial performance state before loading the panel:
+In the consuming project's configuration file, such as projectTemplate's `project_config.scd`, configure the initial performance state before loading the panel:
 
 ```supercollider
 ~controllerPanelInitialConfig = (
@@ -93,11 +94,16 @@ Configure the initial performance state before loading the panel:
     controllers: \both,
     twisterActive: [0, 1],
     spectraActive: [0, 1],
+    spectraToggle: [],
     spectraDeterministic: [1]
 );
 ```
 
 `twisterActive` and `spectraActive` use indices from `0` through `15`.
+
+`spectraToggle` lists buttons that alternate between explicit `1` and `0`
+states on successive presses. The GUI and hardware LED remain active while
+the stored state is `1`.
 
 `spectraDeterministic` lists active Spectra buttons whose state remains active until completion is reported.
 
@@ -109,7 +115,7 @@ Switch a running panel to performance mode:
 
 ## Apply Twister mappings
 
-Define one map per source:
+In projectTemplate, edit each source's `twisterMap` in `project_init.scd`; `project_maps.scd` applies those mappings. The following snippets show the controller helper interface directly.
 
 ```supercollider
 ~sourceMaps = [
@@ -170,9 +176,11 @@ Twister control buses contain normalized values from `0.0` to `1.0`. Mapping `mi
 ~completeSpectraButton.(1);
 ```
 
-Call `~completeSpectraButton` when the work associated with a deterministic Spectra button has completed.
+Call `~completeSpectraButton` from the project action or process-completion file, such as projectTemplate's `project_actions.scd`, when the work associated with a deterministic Spectra button has completed.
 
 ## Mapping and label helpers
+
+Call these helpers from the project's controller-map file, such as projectTemplate's `project_maps.scd`.
 
 ```supercollider
 ~applyTwisterMap.(list, sourceIndex, sourceName);
