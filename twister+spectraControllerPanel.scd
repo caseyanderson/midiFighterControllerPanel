@@ -1,18 +1,6 @@
 /*
 MIDI Fighter Twister + Spectra Control Panel
 Casey Anderson
-
-Twister: CC 0-15, Channel 1 (chan=0)
-Spectra: CC 36-51, Channel 4 (chan=3)
-
-On Windows: connects to Voicemeeter Virtual ASIO
-On Mac: connects to the BlackHole + MixPre aggregate device
-
-Usage Example (from another file startup block)
-~homeDir = Platform.userHomeDir;
-~controllerDir = ~homeDir +/+ "midiFighterControllerPanel";
-(~controllerDir +/+ "twister+spectraControllerPanel.scd").load;
-
 */
 
 (

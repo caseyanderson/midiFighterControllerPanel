@@ -217,4 +217,3 @@ Active Spectra controls appear red while idle and yellow while active.
 
 - Active Twister controls send GUI updates, OSC `/knobControl` messages, and hardware LED feedback
 - Active Spectra controls send OSC `/buttonControl` messages and hardware LED feedback
-- Use source names that fit comfortably in the controller labels

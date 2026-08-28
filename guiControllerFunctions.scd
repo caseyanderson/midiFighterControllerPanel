@@ -93,26 +93,3 @@
         ~setTwisterDisplayRange.(item[\knob], item[\min], item[\max]);
     };
 };
-////////////////////////////////////
-/* USAGE EXAMPLES
-~enableAllTwisterStatus.();
-~disableAllTwisterStatus.();
-~enableSpectraStatus.(4);
-~enableSpectraStatus.(8);
-~enableSpectraStatus.(12);
-~enableSpectraStatus.(16);
-~enableSpectraStatus.(0);
-~disableAllSpectraStatus.();
-~labelTwisterColumn.(0, "goopyBubble");
-~labelTwisterKnob.(0, "amp");
-~labelTwisterKnob.(4, "outGain");
-~setTwisterDisplayRange.(4, 0.4, 2.2);
-
-~goopyMap = [
-	(knob: 0,  arg: \amp,        label: "amp",     min: 0.0, max: 1.0),
-	(knob: 4,  arg: \outGainCtl, label: "outGain", min: 0.4, max: 2.2),
-	(knob: 8,  arg: \goopCtl,    label: "goop",    min: 0.3, max: 1.0),
-	(knob: 12, arg: \decay,      label: "decay",   min: 0.4, max: 1.4),
-];
-~applyTwisterMap.(~goopyMap, 0, "goopyBubble");
-*/
