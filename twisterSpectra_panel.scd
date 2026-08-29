@@ -3,11 +3,17 @@
 // └─────────────────────────────────────────────────────────────────────────────┘
 ~makeCombinedPanel = {
     var panelHeight, panelWidth, performanceContent, performanceItems, performanceSources, sizeHint;
+    var performanceGap, performanceSpectraControlHeight;
+    var performanceTitleHeight, performanceTwisterColumnWidth;
     var footerControls, spectraIndices, spectraStrips, twisterIndices, twisterStrips;
 	var spectraGrid, spectraLayout, topLayout, twisterLayout;
 
     panelWidth = ~controllerPanelSize.(892);
     panelHeight = ~controllerPanelSize.(692);
+    performanceGap = ~controllerPanelSize.(10);
+    performanceSpectraControlHeight = ~controllerPanelSize.(160);
+    performanceTitleHeight = ~controllerPanelSize.(18);
+    performanceTwisterColumnWidth = ~controllerPanelSize.(100);
 
     twisterIndices = if(~controllerPanelMode == \prototype, {
         ~knobs
@@ -166,6 +172,7 @@
         performanceSources.collect { |sourceKey|
             var channelBody, channelStrip, channelTitle, content;
             var gainParts, gainStageView, notchX, notchY;
+            var makeupBounds, meterBounds, spectraBounds, trimBounds;
             var placeGainStageChildren;
             var performanceSpectraStrips;
             var rightColumn, sourceSpectra, sourceTwister, spectraColumn, twisterColumn;
@@ -185,7 +192,7 @@
                         [twisterStrips[index][\layout], stretch: 0]
                     }
                     ++ [nil]
-                )).spacing_(~controllerPanelSize.(10));
+                )).spacing_(performanceGap);
             });
 
             spectraColumn = if(sourceSpectra.notEmpty, {
@@ -200,22 +207,19 @@
             rightColumn = if(content.notNil and: {
                 content.tryPerform(\at, \type) == \gainStageDoctor
             }, {
-                var gap = ~controllerPanelSize.(10);
                 var controlWidth = content[\controlWidth];
                 var meterColumnWidth = content[\meterColumnWidth];
-                var spectraControlHeight =
-                ~controllerPanelSize.(160);
                 var spectraHeight = if(sourceSpectra.notEmpty, {
-                    (spectraControlHeight * sourceSpectra.size)
-                    + (gap * (sourceSpectra.size - 1))
+                    (performanceSpectraControlHeight * sourceSpectra.size)
+                    + (performanceGap * (sourceSpectra.size - 1))
                 }, {
                     0;
                 });
                 var stageHeight, stageWidth;
 
-                notchX = controlWidth + gap;
+                notchX = controlWidth + performanceGap;
                 notchY = if(sourceSpectra.notEmpty, {
-                    spectraHeight + gap;
+                    spectraHeight + performanceGap;
                 }, {
                     0;
                 });
@@ -223,8 +227,43 @@
                 stageWidth = notchX + meterColumnWidth;
                 stageHeight = notchY
                 + content[\controlHeight]
-                + gap
+                + performanceGap
                 + content[\controlHeight];
+
+                spectraBounds = sourceSpectra.collect {
+                    |index, itemIndex|
+
+                    Rect(
+                        0,
+                        itemIndex * (
+                            performanceSpectraControlHeight
+                            + performanceGap
+                        ),
+                        controlWidth,
+                        performanceSpectraControlHeight
+                    )
+                };
+
+                makeupBounds = Rect(
+                    0,
+                    notchY,
+                    controlWidth,
+                    content[\controlHeight]
+                );
+
+                trimBounds = Rect(
+                    0,
+                    notchY + content[\controlHeight] + performanceGap,
+                    controlWidth,
+                    content[\controlHeight]
+                );
+
+                meterBounds = Rect(
+                    notchX,
+                    0,
+                    content[\meterWidth],
+                    stageHeight
+                );
 
                 gainStageView = View()
                 .fixedSize_(stageWidth @ stageHeight);
@@ -237,12 +276,7 @@
                         strip = ~spectraLayout.(
                             index,
                             gainStageView,
-                            Rect(
-                                0,
-                                itemIndex * (spectraControlHeight + gap),
-                                controlWidth,
-                                spectraControlHeight
-                            )
+                            spectraBounds[itemIndex]
                         );
 
                         spectraStrips[index] = strip;
@@ -254,19 +288,9 @@
 
                 gainParts = content[\build].(
                     gainStageView,
-                    Rect(0, notchY, controlWidth, content[\controlHeight]),
-                    Rect(
-                        0,
-                        notchY + content[\controlHeight] + gap,
-                        controlWidth,
-                        content[\controlHeight]
-                    ),
-                    Rect(
-                        notchX,
-                        0,
-                        content[\meterWidth],
-                        stageHeight
-                    )
+                    makeupBounds,
+                    trimBounds,
+                    meterBounds
                 );
 
                 placeGainStageChildren = {
@@ -274,24 +298,14 @@
                         performanceSpectraStrips.do {
                             |strip, itemIndex|
 
-                            strip[\layout].bounds_(Rect(
-                                0,
-                                itemIndex * (spectraControlHeight + gap),
-                                controlWidth,
-                                spectraControlHeight
-                            ));
+                            strip[\layout].bounds_(
+                                spectraBounds[itemIndex]
+                            );
                         };
                     });
 
-                    gainParts[\makeup].bounds_(
-                        Rect(0, notchY, controlWidth, content[\controlHeight])
-                    );
-                    gainParts[\trim].bounds_(Rect(
-                        0,
-                        notchY + content[\controlHeight] + gap,
-                        controlWidth,
-                        content[\controlHeight]
-                    ));
+                    gainParts[\makeup].bounds_(makeupBounds);
+                    gainParts[\trim].bounds_(trimBounds);
                 };
 
                 gainStageView.onResize_({ placeGainStageChildren.() });
@@ -321,12 +335,12 @@
                     [];
                 })) ++ [nil]
             ))
-            .spacing_(~controllerPanelSize.(10));
+            .spacing_(performanceGap);
 
             channelTitle = StaticText()
             .string_(sourceKey.asString)
             .align_(\center)
-            .fixedHeight_(~controllerPanelSize.(18));
+            .fixedHeight_(performanceTitleHeight);
 
             channelStrip = View()
             .layout_(VLayout(
@@ -340,7 +354,7 @@
             }, {
                 channelStrip.fixedWidth_(
                     (if(sourceTwister.notEmpty, {
-                        ~controllerPanelSize.(100) + ~controllerPanelSize.(10);
+                        performanceTwisterColumnWidth + performanceGap;
                     }, {
                         0;
                     })) + notchX + content[\meterColumnWidth]
@@ -355,7 +369,7 @@
 
     topLayout = if(~controllerPanelMode == \performance, {
         HLayout(*performanceItems)
-        .spacing_(~controllerPanelSize.(10));
+        .spacing_(performanceGap);
     }, {
         HLayout(
             if(twisterLayout.notNil, { [twisterLayout, align: \top] }),
