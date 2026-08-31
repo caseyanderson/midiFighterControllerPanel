@@ -22,14 +22,15 @@ MIDIIn.connectAll;
 	nil;
 });
 
-~spectraDestinationIndex = MIDIClient.destinations.detectIndex { |dest|
+~spectraDestination = MIDIClient.destinations.detect { |dest|
 	dest.name.contains("Spectra")
 };
 
-~spectraLEDOut = if(~spectraDestinationIndex.notNil, {
-	MIDIOut(
-		~spectraDestinationIndex,
-		MIDIClient.destinations[~spectraDestinationIndex].uid
+~spectraLEDOut = if(~spectraDestination.notNil, {
+	MIDIOut.newByName(
+		~spectraDestination.device,
+		~spectraDestination.name,
+		false
 	);
 }, {
 	"MIDI Fighter Spectra output not found; LED feedback is disabled.".warn;
