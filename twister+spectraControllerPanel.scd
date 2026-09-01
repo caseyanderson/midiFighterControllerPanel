@@ -61,6 +61,14 @@ s.waitForBoot({
 		(~controllerDir +/+ "twisterSpectra_knobActions.scd").load;
 		(~controllerDir +/+ "twisterSpectra_midi.scd").load;
 		~combinedPanel.onClose_(~controllerPanelCleanup);
+
+		~combinedPanel.visible_(false);
+
+		{
+			~combinedPanel
+			.visible_(true)
+			.front;
+		}.defer(0.1);
 	};
 
 	if(~controllerPanelIsDeferred.not, {
